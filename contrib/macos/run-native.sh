@@ -13,8 +13,28 @@ if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
     exit 1
 fi
 
-if [[ ! -x "${ODX_DIR}/run.sh" ]]; then
-    echo "ODX is not installed in ${ODX_DIR}." >&2
+odx_python=""
+for candidate in \
+    "${ODX_DIR}/venv/bin/python3" \
+    "${ODX_DIR}/venv/bin/python"
+do
+    if [[ -x "${candidate}" ]]; then
+        odx_python="${candidate}"
+        break
+    fi
+done
+
+densify_point_cloud="${ODX_DIR}/SuperBuild/install/bin/OpenMVS/DensifyPointCloud"
+
+if [[ \
+    ! -x "${ODX_DIR}/run.sh" ||
+    -z "${odx_python}" ||
+    ! -x "${densify_point_cloud}" \
+]]; then
+    echo "The native ODX installation is incomplete in ${ODX_DIR}." >&2
+    echo "Expected:" >&2
+    echo "  ${ODX_DIR}/venv/bin/python3" >&2
+    echo "  ${densify_point_cloud}" >&2
     echo "Run contrib/macos/install-native.sh first." >&2
     exit 1
 fi

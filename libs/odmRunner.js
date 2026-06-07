@@ -127,13 +127,30 @@ module.exports = {
             const env = utils.clone(process.env);
             env.ODX_OPTIONS_TMP_FILE = utils.tmpPath(".json");
             env.ODX_PATH = config.odx_path;
-            const shQuote = s =>  {
-                s = s.replace(/"/g, "")
-                return `"${s}"`;
-            }
+            const scriptPath = path.join(
+                __dirname,
+                "..",
+                "helpers",
+                "odmOptionsToJson.py"
+            );
+            let processOutput = "";
+            let childProcess = spawn(
+                pythonExe,
+                [
+                    scriptPath,
+                    "--project-path",
+                    config.odx_path,
+                    "bogusname"
+                ],
+                { env }
+            );
 
-            let childProcess = spawn(pythonExe, [shQuote(path.join(__dirname, "..", "helpers", "odmOptionsToJson.py")),
-                    "--project-path", shQuote(config.odx_path), "bogusname"], { env, shell: true });
+            childProcess.stdout.on("data", chunk => {
+                processOutput += chunk.toString();
+            });
+            childProcess.stderr.on("data", chunk => {
+                processOutput += chunk.toString();
+            });
     
             // Cleanup on done
             let handleResult = (err, result) => {
@@ -149,9 +166,21 @@ module.exports = {
     
             childProcess
                 .on('exit', (code, signal) => {
+                    if (code !== 0){
+                        const details = processOutput.trim();
+                        handleResult(new Error(
+                            `Cannot load ODX options using ${pythonExe}` +
+                            `${details ? `: ${details}` : ""}`
+                        ));
+                        return;
+                    }
+
                     try{
                         fs.readFile(env.ODX_OPTIONS_TMP_FILE, { encoding: "utf8" }, (err, data) => {
-                            if (err) handleResult(new Error(`Cannot read list of options from ODX (from temporary file). Is ODX installed in ${config.odx_path}?`));
+                            if (err) handleResult(new Error(
+                                `Cannot read list of options from ODX. ` +
+                                `Verify the native installation in ${config.odx_path}.`
+                            ));
                             else{
                                 let json = JSON.parse(data);
                                 handleResult(null, json);
@@ -167,11 +196,19 @@ module.exports = {
         if (os.platform() === "win32"){
             getOdmOptions("helpers\\odm_python.bat", done);
         }else{
-            // Try Python3 first
-            getOdmOptions("python3", (err, result) => {
-                if (err) getOdmOptions("python", done);
-                else done(null, result);
-            });
+            const virtualEnvPython = [
+                path.join(config.odx_path, "venv", "bin", "python3"),
+                path.join(config.odx_path, "venv", "bin", "python")
+            ].find(candidate => fs.existsSync(candidate));
+
+            if (virtualEnvPython){
+                getOdmOptions(virtualEnvPython, done);
+            }else{
+                getOdmOptions("python3", (err, result) => {
+                    if (err) getOdmOptions("python", done);
+                    else done(null, result);
+                });
+            }
         }
     }
 };
