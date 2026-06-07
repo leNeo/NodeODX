@@ -44,9 +44,20 @@ fi
     cd "${ODX_DIR}"
     git fetch origin "${ODX_BRANCH}"
     git switch "${ODX_BRANCH}"
-    git pull --ff-only
+    git pull --ff-only origin "${ODX_BRANCH}"
     bash configure_macos.sh install "${performance_cores}"
 )
+
+odx_python="${ODX_DIR}/venv/bin/python3"
+densify_point_cloud="${ODX_DIR}/SuperBuild/install/bin/OpenMVS/DensifyPointCloud"
+
+if [[ ! -x "${odx_python}" || ! -x "${densify_point_cloud}" ]]; then
+    echo "ODX installation did not produce all required native files." >&2
+    echo "Missing or non-executable:" >&2
+    [[ -x "${odx_python}" ]] || echo "  ${odx_python}" >&2
+    [[ -x "${densify_point_cloud}" ]] || echo "  ${densify_point_cloud}" >&2
+    exit 1
+fi
 
 (
     cd "${NODEODX_DIR}"
