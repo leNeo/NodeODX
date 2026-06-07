@@ -26,6 +26,17 @@ contrib/macos/install-native.sh
 
 The ODX native build is substantial and can take a while.
 
+ODX is installed outside cloud-synchronized folders by default:
+
+```text
+~/Library/Application Support/NodeODX/ODX
+```
+
+Keeping Git repositories and native build trees outside iCloud avoids
+truncated Git packfiles and partial compiler outputs. If an existing ODX
+repository at this location is corrupt, the installer preserves it with a
+`.corrupt.<timestamp>` suffix and creates a clean clone.
+
 ## Run
 
 ```sh
@@ -40,6 +51,7 @@ Optional environment variables:
 ```sh
 NODEODX_PORT=3000
 NODEODX_TOKEN=choose-a-long-random-token
+NODEODX_NATIVE_ROOT="/path/to/native/runtime"
 ODX_DIR=/path/to/ODX
 ODX_COREML_COMPUTE_UNITS=ALL
 ODX_COREML_PROFILE=0

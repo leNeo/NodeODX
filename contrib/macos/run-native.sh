@@ -4,7 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NODEODX_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-ODX_DIR="${ODX_DIR:-$(cd "${NODEODX_DIR}/.." && pwd)/ODX}"
+NODEODX_NATIVE_ROOT="${NODEODX_NATIVE_ROOT:-${HOME}/Library/Application Support/NodeODX}"
+ODX_DIR="${ODX_DIR:-${NODEODX_NATIVE_ROOT}/ODX}"
 NODEODX_PORT="${NODEODX_PORT:-3000}"
 NODEODX_TOKEN="${NODEODX_TOKEN:-}"
 

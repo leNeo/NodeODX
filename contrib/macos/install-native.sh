@@ -4,7 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NODEODX_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-ODX_DIR="${ODX_DIR:-$(cd "${NODEODX_DIR}/.." && pwd)/ODX}"
+NODEODX_NATIVE_ROOT="${NODEODX_NATIVE_ROOT:-${HOME}/Library/Application Support/NodeODX}"
+ODX_DIR="${ODX_DIR:-${NODEODX_NATIVE_ROOT}/ODX}"
 ODX_REPOSITORY="${ODX_REPOSITORY:-https://github.com/leNeo/ODX.git}"
 ODX_BRANCH="${ODX_BRANCH:-codex/apple-silicon-coreml}"
 
@@ -34,6 +35,22 @@ brew install \
     p7zip \
     python@3.12 \
     tbb
+
+mkdir -p "$(dirname "${ODX_DIR}")"
+
+if [[ -d "${ODX_DIR}/.git" ]] &&
+    ! git -C "${ODX_DIR}" fsck --connectivity-only --no-progress >/dev/null 2>&1; then
+    corrupt_odx_dir="${ODX_DIR}.corrupt.$(date +%Y%m%d-%H%M%S)"
+    echo "The ODX Git repository is corrupt. Preserving it at:" >&2
+    echo "  ${corrupt_odx_dir}" >&2
+    mv "${ODX_DIR}" "${corrupt_odx_dir}"
+fi
+
+if [[ -e "${ODX_DIR}" && ! -d "${ODX_DIR}/.git" ]]; then
+    echo "Cannot install ODX because this path already exists and is not a Git repository:" >&2
+    echo "  ${ODX_DIR}" >&2
+    exit 1
+fi
 
 if [[ ! -d "${ODX_DIR}/.git" ]]; then
     git clone --branch "${ODX_BRANCH}" "${ODX_REPOSITORY}" "${ODX_DIR}"
@@ -68,7 +85,7 @@ cat <<EOF
 NodeODX is ready.
 
 Start it with:
-  ODX_DIR="${ODX_DIR}" contrib/macos/run-native.sh
+  contrib/macos/run-native.sh
 
 Register this processing node in WebODM:
   hostname: host.docker.internal
