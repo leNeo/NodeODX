@@ -28,7 +28,6 @@ brew install \
     cgal \
     cmake \
     eigen \
-    gcc@12 \
     gdal \
     libomp \
     node \
