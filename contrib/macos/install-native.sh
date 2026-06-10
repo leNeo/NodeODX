@@ -60,7 +60,10 @@ fi
     cd "${ODX_DIR}"
     git fetch origin "${ODX_BRANCH}"
     git switch "${ODX_BRANCH}"
-    git pull --ff-only origin "${ODX_BRANCH}"
+    # --autostash: des fichiers (ex: SuperBuild/CMakeLists.txt) peuvent être
+    # modifiés localement ; on les met de côté le temps du pull puis on les
+    # réapplique, au lieu d'avorter la mise à jour.
+    git pull --ff-only --autostash origin "${ODX_BRANCH}"
     bash configure_macos.sh install "${performance_cores}"
 )
 
